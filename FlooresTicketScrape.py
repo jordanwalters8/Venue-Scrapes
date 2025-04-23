@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-# Floores
+# Floores Scraper (GitHub-Compatible Headless Mode)
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -14,9 +11,15 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
 
-# Setup Chrome with headless disabled
+# Setup Chrome with GitHub Actions–friendly headless options
 options = Options()
-# options.add_argument("--headless=new")
+options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--disable-gpu")
+options.add_argument("--window-size=1920x1080")
+
+# Launch browser
 driver = webdriver.Chrome(options=options)
 
 # Load the events page
@@ -44,14 +47,14 @@ for event_link in event_links:
         # Navigate up to the wrapper
         wrapper = event_link.find_element(By.XPATH, "./ancestor::div[contains(@class, 'rhp-event')]")
 
-        # Event day (e.g., "Thu, Apr 10")
+        # Event day
         try:
             date_div = wrapper.find_element(By.ID, "eventDate")
             event_day = date_div.text.strip()
         except:
             event_day = ""
 
-        # Event time (ignore "Doors")
+        # Event time
         try:
             time_spans = wrapper.find_elements(By.CSS_SELECTOR, "span.rhp-event__time-text--list")
             actual_times = [span.text.strip() for span in time_spans if "door" not in span.text.lower()]
@@ -90,5 +93,5 @@ driver.quit()
 # Save to DataFrame and CSV
 df = pd.DataFrame(events)
 df.to_csv("floores_all_events_full.csv", index=False)
+print("\n✅ Saved to 'floores_all_events_full.csv'")
 print(df)
-
