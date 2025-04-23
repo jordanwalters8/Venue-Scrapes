@@ -25,7 +25,8 @@ jobs:
         run: python ListeningRoomScrape.py
 
       - name: Upload results
-        uses: actions/upload-artifact@v3
+        uses: uses: actions/upload-artifact@v4
+
         with:
           name: listening-room-data
           path: listening_room_shows.csv
