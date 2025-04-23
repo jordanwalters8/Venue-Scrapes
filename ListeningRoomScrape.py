@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-# Listening Room
+# Listening Room Scraper with Headless Chrome for GitHub Actions
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -12,15 +9,22 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import re
 
-# Setup Selenium
-options = webdriver.ChromeOptions()
-# options.add_argument('--headless')  # Uncomment to hide the browser
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+# Setup Headless Chrome for GitHub Actions
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--window-size=1920x1080")
+
+# Initialize Driver
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 wait = WebDriverWait(driver, 10)
 
 # Navigate to shows page
@@ -33,7 +37,7 @@ events = []
 # Loop through pages 1, 2, 3
 for page_number in range(1, 4):
     print(f"\n🔄 Scraping Page {page_number}...")
-    
+
     if page_number > 1:
         try:
             page_link = wait.until(EC.element_to_be_clickable(
@@ -48,7 +52,6 @@ for page_number in range(1, 4):
     show_tiles = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "grid-product__image")))
 
     for tile_index in range(len(show_tiles)):
-        # Re-fetch the clickable tiles each time to avoid stale elements
         show_tiles = driver.find_elements(By.CLASS_NAME, "grid-product__image")
         if tile_index >= len(show_tiles):
             continue
@@ -119,11 +122,10 @@ df['Price ($)'] = df['Price'].replace(r'[\$,]', '', regex=True).astype(float)
 avg_price = df.groupby(['Day of Week', 'Hour'])['Price ($)'].transform('mean')
 df['Above Avg for Day+Hour'] = df['Price ($)'] > avg_price
 
-# Show final results
+# Final output
 print("\n🎤 Final Scraped Shows with Pricing Analysis:\n")
 print(df[['Artist/Event', 'Date/Time', 'Room', 'Price ($)', 'Tickets Left', '% Sold', 'Above Avg for Day+Hour']].to_string(index=False))
 
-# Save FINAL DataFrame to CSV
+# Save final version again
 df.to_csv("listening_room_shows.csv", index=False)
 print("✅ Final CSV saved with pricing analysis included.")
-
