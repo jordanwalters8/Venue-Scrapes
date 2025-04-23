@@ -22,7 +22,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Listening Room scraper
-        run: python listening_room_scraper.py
+        run: python ListeningRoomScrape.py
 
       - name: Upload results
         uses: actions/upload-artifact@v3
